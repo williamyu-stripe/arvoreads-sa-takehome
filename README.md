@@ -122,7 +122,7 @@ To simplify this project, we're also not using any database here, either. Instea
 To get started, clone the repository and run `npm install` to install dependencies:
 
 ```
-git clone https://github.com/mattmitchell6/sa-takehome-project-node && cd sa-takehome-project-node
+git clone https://github.com/williamyu-stripe/arvoreads-sa-takehome.git
 npm install
 ```
 
