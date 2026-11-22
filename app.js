@@ -1,13 +1,13 @@
 const express = require('express');
 const path = require('path');
-const exphbs = require('express-handlebars');
+const { engine } = require('express-handlebars');
 require('dotenv').config();
-const stripe = require('stripe');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 var app = express();
 
 // view engine setup (Handlebars)
-app.engine('hbs', exphbs({
+app.engine('hbs', engine({
   defaultLayout: 'main',
   extname: '.hbs'
 }));
@@ -26,10 +26,10 @@ app.get('/', function(req, res) {
 /**
  * Checkout route
  */
-app.get('/checkout', function(req, res) {
+app.get('/checkout', async function(req, res) {
   // Just hardcoding amounts here to avoid using a database
   const item = req.query.item;
-  let title, amount, error;
+  let title, amount, error, clientSecret;
 
   switch (item) {
     case '1':
@@ -46,14 +46,33 @@ app.get('/checkout', function(req, res) {
       break;     
     default:
       // Included in layout view, feel free to assign error
-      error = "No item selected"      
+      error = "No item selected"
       break;
+  }
+
+  // Create the PaymentIntent server-side for the chosen book.
+  // Return its client_secret, where the Payment Element uses it.
+  if (!error) {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        automatic_payment_methods: { enabled: true },
+        metadata: { item: item, title: title }
+      });
+      clientSecret = paymentIntent.client_secret;
+    } catch (err) {
+      console.error(err);
+      error = "We couldn't start the payment. Please try again.";
+    }
   }
 
   res.render('checkout', {
     title: title,
     amount: amount,
-    error: error
+    error: error,
+    clientSecret: clientSecret,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
   });
 });
 

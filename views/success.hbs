@@ -1,13 +1,37 @@
 <main>
+  {{#if paymentIntentId}}
   <div class="mt-40 text-center text-success">
     <h1>
-      <i class="far fa-check-circle"></i> 
+      <i class="far fa-check-circle"></i>
       Success!
     </h1>
   </div>
-  <div class="mt-40 text-center">
-    <div class="mt-20 text-center text-secondary border-placeholder">
-      Add details about the payment here!
+  <div class="row justify-content-md-center">
+    <div class="col-6">
+      <div class="card box-shadow mt-40">
+        <div class="card-body">
+          <h5 class="card-title">Thanks for your purchase</h5>
+          <p class="text-secondary">{{title}}</p>
+          <dl class="row mb-0">
+            <dt class="col-5">Total charged</dt>
+            <dd class="col-7">$<span class="amount" data-amount="{{amount}}"></span> {{currency}}</dd>
+            <dt class="col-5">Payment ID</dt>
+            <dd class="col-7"><code>{{paymentIntentId}}</code></dd>
+            {{#if receiptEmail}}
+            <dt class="col-5">Receipt sent to</dt>
+            <dd class="col-7">{{receiptEmail}}</dd>
+            {{/if}}
+          </dl>
+        </div>
+      </div>
+      <div class="mt-20 text-center">
+        <a href="/" class="btn btn-outline-primary">Back to the shop</a>
+      </div>
     </div>
   </div>
+  {{else}}
+  <div class="mt-40 text-center">
+    <a href="/" class="btn btn-outline-primary">Back to the shop</a>
+  </div>
+  {{/if}}
 </main>
