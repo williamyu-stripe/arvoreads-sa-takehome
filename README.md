@@ -1,3 +1,26 @@
+## What is this?
+
+This repository contains my solution to the SA Solutions Architect take-home exercise. It brings together the project implementation, supporting technical documentation, and my responses to the exercise questions in one place.
+
+Arvo Reads is a simple bookstore application built with JavaScript, Node.js, Express, Handlebars, and Bootstrap. This repository contains my completed Stripe Solutions Architect take-home project, which adds test-mode payment functionality to the original e-commerce application.
+
+The integration uses Stripe’s Payment Element on the front end and the Payment Intents API on the server. It follows Stripe’s intent-first integration pattern, keeping sensitive card data and the Stripe secret key out of the browser.
+
+## What does it do?
+
+The application allows a customer to select a book and complete a test payment through Stripe.
+
+The payment flow works as follows:
+
+- The server creates a PaymentIntent for the selected book using a server-controlled price.
+- The browser displays Stripe’s Payment Element and sends payment details to Stripe.
+- The application records the customer’s email on the PaymentIntent before confirmation.
+- `stripe.confirmPayment()` confirms the payment and handles additional authentication, including 3D Secure, when required.
+- After a successful payment, the customer is redirected to a confirmation page showing the amount and PaymentIntent ID.
+- A `payment_intent.succeeded` webhook provides a reliable server-side notification.
+- Declines and other payment errors are displayed to the customer without exposing sensitive payment details.
+
+
 ## How to build, configure and run your application##
 
 ### Prerequisites
