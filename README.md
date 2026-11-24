@@ -101,7 +101,7 @@ Steps to complete the project
 
 8. Added a payment_intent.succeeded webhook for future integration work,
 
-9. Tested the end-to-end processing using Stripe test cards. 
+9. Tested the end-to-end processing using Stripe test cards. Add the Contact Details Element to the checkout page. 
 
 ### Docs used
 
