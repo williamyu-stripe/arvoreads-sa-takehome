@@ -124,6 +124,7 @@ Steps to complete the project
 4. Use Stripe Projects to create full page or embedded app. 
 
 
+
 # Take home project
 This is a simple e-commerce application that a customer can use to purchase a book, but it's missing the payments functionality —  your goal is to integrate Stripe to get this application running!
 

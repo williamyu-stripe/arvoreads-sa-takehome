@@ -18,9 +18,8 @@
         <form name="payment-form" id="payment-form"
               data-client-secret="{{clientSecret}}"
               data-publishable-key="{{publishableKey}}">
-          <div>
-            <label for="email">Email address</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="you@email.com">
+          <div id="contact-details-element">
+            <!-- Stripe's Contact Details Element (email, also used for Link) is mounted here by /js/checkout.js -->
           </div>
           <div class="mt-20" id="payment-element">
             <!-- Stripe's Payment Element is mounted here by /js/checkout.js -->

@@ -13,6 +13,45 @@ app.engine('hbs', engine({
 }));
 app.set('view engine', 'hbs');
 app.use(express.static(path.join(__dirname, 'public')));
+
+/**
+ * Webhook route
+ * Stripe calls this when a payment succeeds, even if the customer closed the tab
+ * before reaching /success. It must be registered before express.json() because
+ * the signature check needs the raw, unparsed request body.
+ */
+app.post('/webhook', express.raw({ type: 'application/json' }), function(req, res) {
+  let event;
+
+  try {
+    // Proves the request came from Stripe and wasn't changed on the way
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      req.headers['stripe-signature'],
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Webhook signature check failed:', err.message);
+    return res.status(400).send('Webhook Error: ' + err.message);
+  }
+
+  switch (event.type) {
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object;
+      // This is where fulfilment would go, e.g. emailing a download link for the book
+      console.log('Payment succeeded:', paymentIntent.id,
+        paymentIntent.amount, paymentIntent.currency,
+        paymentIntent.metadata.title, paymentIntent.metadata.customer_email);
+      break;
+    }
+    default:
+      console.log('Unhandled event type:', event.type);
+  }
+
+  // Reply quickly so Stripe doesn't retry the event
+  res.json({ received: true });
+});
+
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json({}));
 
@@ -77,10 +116,69 @@ app.get('/checkout', async function(req, res) {
 });
 
 /**
+ * Save the customer's email on the PaymentIntent before it is confirmed.
+ * Metadata needs the secret key, so the browser calls this route rather than Stripe.
+ */
+app.post('/payment-intent/email', async function(req, res) {
+  const { clientSecret, email } = req.body;
+
+  if (!clientSecret || !email) {
+    return res.status(400).json({ error: "Missing payment or email" });
+  }
+
+  try {
+    // The client_secret is "pi_..._secret_...". Checking the full secret, not just the ID,
+    // means only the page that owns this payment can change it.
+    const paymentIntentId = clientSecret.split('_secret_')[0];
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.client_secret !== clientSecret) {
+      return res.status(403).json({ error: "Payment not found" });
+    }
+
+    await stripe.paymentIntents.update(paymentIntentId, {
+      metadata: { customer_email: email }
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "We couldn't save your email. Please try again." });
+  }
+});
+
+/**
  * Success route
  */
-app.get('/success', function(req, res) {
-  res.render('success');
+app.get('/success', async function(req, res) {
+  // Stripe adds ?payment_intent=pi_... to the return_url after confirmPayment
+  const paymentIntentId = req.query.payment_intent;
+
+  if (!paymentIntentId) {
+    return res.render('success', { error: "No payment found" });
+  }
+
+  // Retrieve the PaymentIntent server-side rather than trusting the URL, so the
+  // amount and status shown come straight from Stripe
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== 'succeeded') {
+      return res.render('success', {
+        error: "Your payment hasn't completed (status: " + paymentIntent.status + ")"
+      });
+    }
+
+    res.render('success', {
+      paymentIntentId: paymentIntent.id,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency.toUpperCase(),
+      title: paymentIntent.metadata.title,
+      receiptEmail: paymentIntent.receipt_email
+    });
+  } catch (err) {
+    console.error(err);
+    res.render('success', { error: "We couldn't find that payment" });
+  }
 });
 
 /**

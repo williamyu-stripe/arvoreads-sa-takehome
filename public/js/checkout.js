@@ -11,6 +11,15 @@
   var stripe = Stripe(form.dataset.publishableKey);
   var elements = stripe.elements({ clientSecret: form.dataset.clientSecret });
 
+  // One email field for both the app and Link. Without it, Link shows its own
+  // email field inside the Payment Element, so the page had two.
+  var email = '';
+  var contactDetailsElement = elements.create('contactDetails');
+  contactDetailsElement.mount('#contact-details-element');
+  contactDetailsElement.on('change', function(event) {
+    email = (event.value && event.value.email) || '';
+  });
+
   var paymentElement = elements.create('payment');
   paymentElement.mount('#payment-element');
 
@@ -33,20 +42,25 @@
       return_url: window.location.origin + '/success'
     };
 
-    var email = document.getElementById('email').value.trim();
     if (email) {
       confirmParams.receipt_email = email;
 
-      // Save the email as PaymentIntent metadata (server-side) before confirming
-      var response = await fetch('/payment-intent/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientSecret: form.dataset.clientSecret, email: email })
-      });
+      // Save the email as PaymentIntent metadata (server-side) before confirming.
+      // Any failure (network error, missing route, non-JSON reply) shows a message
+      // instead of leaving the Pay button stuck.
+      try {
+        var response = await fetch('/payment-intent/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientSecret: form.dataset.clientSecret, email: email })
+        });
 
-      if (!response.ok) {
-        var body = await response.json();
-        message.textContent = body.error;
+        if (!response.ok) {
+          var body = await response.json().catch(function() { return {}; });
+          throw new Error(body.error || "We couldn't save your email. Please try again.");
+        }
+      } catch (err) {
+        message.textContent = err.message;
         submitButton.disabled = false;
         return;
       }
