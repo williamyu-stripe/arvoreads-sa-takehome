@@ -35,7 +35,7 @@
 ## How does the solution work? Which Stripe APIs does it use? How is your application architected?##
 
 
-The email brief asks for Stripe Elements on the front end, so the checkout uses the [Payment Element](https://docs.stripe.com/payments/payment-element). On the back end, the Express server uses the [Payment Intents API](https://docs.stripe.com/payments/payment-intents). The design follows Stripe's documented [intent-first integration](https://docs.stripe.com/payments/accept-a-payment-intent-first), which includes a diagram of the flow.
+The project brief asks for Stripe Elements on the front end, so the checkout uses the [Payment Element](https://docs.stripe.com/payments/payment-element). On the back end, the Express server uses the [Payment Intents API](https://docs.stripe.com/payments/payment-intents). The design follows Stripe's documented [intent-first integration](https://docs.stripe.com/payments/accept-a-payment-intent-first), which includes a diagram of the flow.
 The Checkout Sessions API also works with the Payment Element, and Stripe recommends it for most new integrations. It fits better when a business needs more than a payment, such as Stripe Tax, discounts, shipping or subscriptions.
 
 
@@ -101,12 +101,8 @@ Steps to complete the project
 4. Use Stripe Projects to create full page or embedded app. 
 
 
-
-
 # Take home project
 This is a simple e-commerce application that a customer can use to purchase a book, but it's missing the payments functionality —  your goal is to integrate Stripe to get this application running!
-
-
 
 
 ## Candidate instructions
